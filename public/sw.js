@@ -1,4 +1,4 @@
-const STATIC_CHACHES_NAME = 'static-v3';
+const STATIC_CHACHES_NAME = 'static-v9';
 const DYNAMIC_CHACHES_NAME = 'dynamic';
 
 
@@ -13,6 +13,7 @@ self.addEventListener('install', (event) => {
                 cache.addAll([
                     '/',
                     '/index.html',
+                    '/offline.html',
                     '/src/js/app.js',
                     '/src/js/promise.js',
                     '/src/js/feed.js',
@@ -50,27 +51,69 @@ self.addEventListener('activate', (event) => {
 
 // event เมื่อมีการโหลด asset ต่างๆ เช่น css js image file
 
+// base caches
+
+// self.addEventListener('fetch', (event) => {
+//     // console.log('[Service Worker] fetching something ...', event);
+//     event.respondWith(
+//         caches.match(event.request)
+//             .then((response) => {
+//                 if(response) {
+//                     return response;
+//                 } else {
+//                     return fetch(event.request)
+//                         .then((res) => {
+//                             // open dynamic caches
+//                             return caches.open(DYNAMIC_CHACHES_NAME)
+//                                 .then((cache) => {
+//                                     cache.put(event.request.url, res.clone());
+//                                     return res;
+//                                 })
+//                         })
+//                         .catch((err) => {
+//                             console.log(err);
+//                             return caches.open(STATIC_CHACHES_NAME)
+//                             .then((cache) => {
+//                                 cache.match('/offline.html')
+//                             })
+//                         });
+//                 }
+//             })
+//     );
+// });
+
+// Cache-only
+// self.addEventListener('fetch', (event) => {
+//     // console.log('[Service Worker] fetching something ...', event);
+//     event.respondWith(
+//         caches.match(event.request)  
+//     );
+// });
+
+// Network-only
+// self.addEventListener('fetch', (event) => {
+//     // console.log('[Service Worker] fetching something ...', event);
+//     event.respondWith(
+//         fetch(event.request)  
+//     );
+// });
+
+
+//  Network with Cache fallback
 self.addEventListener('fetch', (event) => {
     // console.log('[Service Worker] fetching something ...', event);
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                if(response) {
-                    return response;
-                } else {
-                    return fetch(event.request)
-                        .then((res) => {
-                            // open dynamic caches
-                            return caches.open(DYNAMIC_CHACHES_NAME)
-                                .then((cache) => {
-                                    cache.put(event.request.url, res.clone());
-                                    return res;
-                                })
+        fetch(event.request)
+            .then((res) => {
+                return caches.open(DYNAMIC_CHACHES_NAME)
+                        .then((cache) => {
+                            cache.put(event.request.url, res.clone());
+                            return res;
                         })
-                        .catch((err) => {
-                            console.log(err);
-                        });
-                }
+            })
+            .catch((err) => {
+                console.log(err);
+                return caches.match(event.request)  
             })
     );
 });
