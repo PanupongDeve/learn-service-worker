@@ -97,6 +97,7 @@ fetch(url)
 // fetch from caches
 
 if ('caches' in window) {
+  console.log('caches',caches);
   caches.match(url)
     .then((response) => {
       if (response) {

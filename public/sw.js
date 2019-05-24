@@ -74,7 +74,7 @@ self.addEventListener('activate', (event) => {
 //                             console.log(err);
 //                             return caches.open(STATIC_CHACHES_NAME)
 //                             .then((cache) => {
-//                                 cache.match('/offline.html')
+//                                 return cache.match('/offline.html')
 //                             })
 //                         });
 //                 }
@@ -100,20 +100,70 @@ self.addEventListener('activate', (event) => {
 
 
 //  Network with Cache fallback
+// self.addEventListener('fetch', (event) => {
+//     // console.log('[Service Worker] fetching something ...', event);
+//     event.respondWith(
+//         fetch(event.request)
+//             .then((res) => {
+//                 return caches.open(DYNAMIC_CHACHES_NAME)
+//                         .then((cache) => {
+//                             cache.put(event.request.url, res.clone());
+//                             return res;
+//                         })
+//             })
+//             .catch((err) => {
+//                 console.log(err);
+//                 return caches.match(event.request)  
+//             })
+//     );
+// });
+
+
+// caches then network
 self.addEventListener('fetch', (event) => {
-    // console.log('[Service Worker] fetching something ...', event);
-    event.respondWith(
-        fetch(event.request)
-            .then((res) => {
-                return caches.open(DYNAMIC_CHACHES_NAME)
-                        .then((cache) => {
-                            cache.put(event.request.url, res.clone());
+    const url = 'https://httpbin.org/get';
+    console.log('to do in case 1');
+    if (event.request.url.indexOf(url) > -1) {
+        event.respondWith(
+            caches.open(DYNAMIC_CHACHES_NAME)
+                .then((cache) => {
+                    return fetch(event.request)
+                        .then((res) => {
+                            cache.put(event.request, res.clone());
                             return res;
-                        })
-            })
-            .catch((err) => {
-                console.log(err);
-                return caches.match(event.request)  
-            })
-    );
+                        });
+                })
+            
+        );
+    } else {
+        console.log('to do in case 2');
+        event.respondWith(
+            caches.match(event.request)
+                .then((response) => {
+                    if(response) {
+                        return response;
+                    } else {
+                        return fetch(event.request)
+                            .then((res) => {
+                                // open dynamic caches
+                                return caches.open(DYNAMIC_CHACHES_NAME)
+                                    .then((cache) => {
+                                        cache.put(event.request.url, res.clone());
+                                        return res;
+                                    })
+                            })
+                            .catch((err) => {
+                                console.log(err);
+                                return caches.open(STATIC_CHACHES_NAME)
+                                .then((cache) => {
+                                    return cache.match('/offline.html')
+                                })
+                            });
+                    }
+                })
+        );
+    }
+   
 });
+
+
