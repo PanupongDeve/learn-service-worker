@@ -76,13 +76,34 @@ function createCard() {
 }
 
 const url = 'https://httpbin.org/get';
+const url_post = 'https://httpbin.org/post'
 let netWorkDataRecived = false;
 
 // จะทำงาน แบบ parallel
 
 // fetch from server
 
-fetch(url)
+// fetch(url)
+//   .then(function(res) {
+//     return res.json();
+//   })
+//   .then(function(data) {
+//     netWorkDataRecived = true;
+//     console.log('from web', data);
+//     clearCards();
+//     createCard();
+//   });
+
+  fetch(url_post, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      message: 'Some message'
+    })
+  })
   .then(function(res) {
     return res.json();
   })
@@ -94,11 +115,12 @@ fetch(url)
   });
 
 
+
 // fetch from caches
 
 if ('caches' in window) {
   console.log('caches',caches);
-  caches.match(url)
+  caches.match(url_post)
     .then((response) => {
       if (response) {
         return response.json();
